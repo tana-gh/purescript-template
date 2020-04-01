@@ -1,16 +1,17 @@
 {
-  "name": "typescript-template",
+  "name": "purescript-template",
   "version": "1.0.0",
   "main": "dist/main.bundle.js",
   "author": "tana-gh <yozoranotakaku@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "jest",
-    "dev": "webpack-dev-server --config ./build/webpack.dev.config.js",
-    "build": "rm -rf dist && webpack --config ./build/webpack.prod.config.js"
+    "test": "spago test && jest",
+    "dev": "concurrently --kill-others \"spago build --watch\" \"webpack-dev-server --config ./build/webpack.dev.config.js\"",
+    "build": "rm -rf dist && spago build && webpack --config ./build/webpack.prod.config.js"
   },
   "dependencies": {
-    "@babel/runtime": "^7.9.0"
+    "@babel/runtime": "^7.9.0",
+    "materialize-css": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -23,6 +24,7 @@
     "babel-jest": "^25.1.0",
     "babel-loader": "^8.1.0",
     "cache-loader": "^4.1.0",
+    "concurrently": "^5.1.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.4.2",
     "cssnano": "^4.1.10",
@@ -36,6 +38,7 @@
     "postcss-normalize": "^8.0.1",
     "sass": "^1.26.3",
     "sass-loader": "^8.0.2",
+    "spago": "^0.14.0",
     "style-loader": "^1.1.3",
     "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.1",
