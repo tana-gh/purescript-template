@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "test": "spago test && jest",
-    "dev": "concurrently --kill-others \"spago build --watch\" \"webpack-dev-server --config ./build/webpack.dev.config.js\"",
+    "dev": "spago build && concurrently --kill-others \"spago build --watch\" \"webpack-dev-server --config ./build/webpack.dev.config.js\"",
     "build": "rm -rf dist && spago build && webpack --config ./build/webpack.prod.config.js"
   },
   "dependencies": {
@@ -36,6 +36,7 @@
     "mini-css-extract-plugin": "^0.9.0",
     "postcss-loader": "^3.0.0",
     "postcss-normalize": "^8.0.1",
+    "purescript": "^0.13.8",
     "sass": "^1.26.3",
     "sass-loader": "^8.0.2",
     "spago": "^0.14.0",
