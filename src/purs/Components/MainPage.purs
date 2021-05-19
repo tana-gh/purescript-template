@@ -1,8 +1,8 @@
-module Components.MainPage (Query, State, Message, component) where
+module Components.MainPage (Query, State, Output, component) where
 
 import Prelude
 
-import Components.MessageModal (Query(..), State, Message, component) as MessageModal
+import Components.MessageModal (Query(..), State, Output, component) as MessageModal
 import Data.Const (Const)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
@@ -16,22 +16,26 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events (onClick) as HE
 import Halogen.HTML.Properties as HP
 import Record (insert) as Record
+import Type.Proxy (Proxy(..))
 
+type Query :: Type -> Type
 type Query = Const Unit
 
 type State =
     { modalMessage :: String
     }
 
-type Message = Void
+type Output = Void
 
-data Action = ShowDialog
+data Action =
+      ShowDialog
+    | HandleMessageModal MessageModal.Output
 
-type ChildSlots = (child :: H.Slot MessageModal.Query MessageModal.Message Unit)
+type ChildSlots = (child :: H.Slot MessageModal.Query MessageModal.Output Unit)
 
-child_ = SProxy :: SProxy "child"
+_child = Proxy :: Proxy "child"
 
-component :: HC.Component HH.HTML Query State Message Aff
+component :: HC.Component Query State Output Aff
 component =
     HC.mkComponent
         { initialState: identity
@@ -66,19 +70,20 @@ html state =
                         , HH.ClassName "offset-s5"
                         , HH.ClassName "z-depth-5"
                         ]
-                    , HE.onClick $ \_ -> Just ShowDialog
+                    , HE.onClick $ \_ -> ShowDialog
                     ]
                     [ HH.text "Hello" ]
                 ]
             ]
-        , HH.slot child_ unit MessageModal.component (toChildState state) (const Nothing)
+        , HH.slot _child unit MessageModal.component (toChildState state) HandleMessageModal
         ]
     where
         toChildState :: State -> MessageModal.State
         toChildState = Record.insert (SProxy :: SProxy "modalRef") Nothing
 
-handleAction :: Action -> H.HalogenM State Action ChildSlots Message Aff Unit
+handleAction :: Action -> H.HalogenM State Action ChildSlots Output Aff Unit
 handleAction action =
     case action of
-        ShowDialog -> H.query child_ unit (H.request MessageModal.GetRef) >>=
+        ShowDialog -> H.request _child unit MessageModal.GetRef >>=
             traverse_ (\childState -> traverse_ (\ref -> liftAff $ showModal ref) childState.modalRef)
+        HandleMessageModal _ -> pure unit

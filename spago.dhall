@@ -6,14 +6,19 @@ You can edit this file as you like.
 , dependencies =
   [ "aff"
   , "console"
+  , "const"
   , "css"
-  , "debug"
   , "effect"
+  , "foldable-traversable"
   , "halogen"
   , "halogen-css"
+  , "maybe"
   , "prelude"
   , "psci-support"
   , "record"
+  , "transformers"
+  , "web-dom"
+  , "web-html"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "spec/**/*.purs" ]

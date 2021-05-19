@@ -1,4 +1,4 @@
-module Components.MessageModal (Query(..), State, Message, component) where
+module Components.MessageModal (Query(..), State, Input, Output, Action(..), component) where
 
 import Prelude
 
@@ -16,6 +16,7 @@ import Halogen.HTML.CSS (style) as CSS
 import Halogen.HTML.Properties as HP
 import Web.HTML (HTMLElement)
 
+data Query :: Type -> Type
 data Query a = GetRef (State -> a)
 
 type State =
@@ -23,13 +24,15 @@ type State =
     , modalRef     :: Maybe HTMLElement
     }
 
-type Message = Void
+type Input  = State
+type Output = Void
 
 data Action = Initialize
 
+type ChildSlots :: forall k. Row k
 type ChildSlots = ()
 
-component :: HC.Component HH.HTML Query State Message Aff
+component :: HC.Component Query Input Output Aff
 component =
     HC.mkComponent
         { initialState: identity
@@ -37,8 +40,8 @@ component =
         , eval        : HC.mkEval $ HC.defaultEval
             { initialize   = Just Initialize
             , handleQuery  = handleQuery
-            , receive      = const Nothing
             , handleAction = handleAction
+            , receive      = const Nothing
             }
         }
 
@@ -71,14 +74,14 @@ html state =
             ]
         ]
 
-handleQuery :: forall a. Query a -> H.HalogenM State Action ChildSlots Message Aff (Maybe a)
+handleQuery :: forall a. Query a -> H.HalogenM State Action ChildSlots Output Aff (Maybe a)
 handleQuery query =
     case query of
         GetRef reply -> do
             state <- get
             pure $ Just $ reply state
 
-handleAction :: Action -> H.HalogenM State Action ChildSlots Message Aff Unit
+handleAction :: Action -> H.HalogenM State Action ChildSlots Output Aff Unit
 handleAction action =
     case action of
         Initialize -> H.getHTMLElementRef (H.RefLabel "message-modal") >>=
