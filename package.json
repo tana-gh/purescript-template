@@ -7,7 +7,7 @@
   "scripts": {
     "test": "spago test && jest",
     "dev": "spago build && concurrently --kill-others \"spago build --watch\" \"webpack serve --config ./build/webpack.dev.config.js\"",
-    "build": "rm -rf output && spago build && webpack --config ./build/webpack.prod.config.js && yarn licenses list > THIRD_PARTY && cp THIRD_PARTY dist"
+    "build": "rm -rf output/* dist/* && spago build && webpack --config ./build/webpack.prod.config.js && yarn licenses list > THIRD_PARTY && cp THIRD_PARTY dist"
   },
   "dependencies": {
     "@babel/runtime": "^7.14.0",
