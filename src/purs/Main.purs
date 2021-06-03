@@ -18,5 +18,5 @@ main = launchAff_ do
 
 initialState :: MainPage.State
 initialState =
-    { modalMessage: "Hello, world!"
+    { status: "Not opened"
     }

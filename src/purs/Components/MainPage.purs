@@ -3,39 +3,37 @@ module Components.MainPage (Query, State, Output, component) where
 import Prelude
 
 import Components.MessageModal (Query(..), State, Output, component) as MessageModal
+import Control.Monad.State (get, put)
 import Data.Const (Const)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Effect.Aff (Aff)
-import FFI.Materialize (showModal)
-import Halogen (liftAff)
 import Halogen as H
 import Halogen.Component as HC
 import Halogen.HTML as HH
 import Halogen.HTML.Events (onClick) as HE
 import Halogen.HTML.Properties as HP
-import Record (insert) as Record
 import Type.Proxy (Proxy(..))
 
 type Query :: Type -> Type
 type Query = Const Unit
 
 type State =
-    { modalMessage :: String
+    { status:: String
     }
 
+type Input  = State
 type Output = Void
 
 data Action =
       ShowDialog
     | HandleMessageModal MessageModal.Output
 
-type ChildSlots = (child :: H.Slot MessageModal.Query MessageModal.Output Unit)
+type Slots = (child :: H.Slot MessageModal.Query MessageModal.Output Unit)
 
 _child = Proxy :: Proxy "child"
 
-component :: HC.Component Query State Output Aff
+component :: HC.Component Query Input Output Aff
 component =
     HC.mkComponent
         { initialState: identity
@@ -45,7 +43,7 @@ component =
             }
         }
 
-html :: State -> HH.ComponentHTML Action ChildSlots Aff
+html :: State -> HH.ComponentHTML Action Slots Aff
 html state =
     HH.div_
         [ HH.div
@@ -55,6 +53,9 @@ html state =
                 ]
             ]
             [ HH.p
+                [ HP.class_ $ HH.ClassName "center-align" ]
+                [ HH.text state.status ]
+            , HH.p
                 [ HP.class_ $ HH.ClassName "center-align" ]
                 [ HH.text "PureScript + Halogen + Materialize" ]
             , HH.div
@@ -75,15 +76,28 @@ html state =
                     [ HH.text "Hello" ]
                 ]
             ]
-        , HH.slot _child unit MessageModal.component (toChildState state) HandleMessageModal
+        , HH.slot _child unit MessageModal.component childState HandleMessageModal
         ]
     where
-        toChildState :: State -> MessageModal.State
-        toChildState = Record.insert (SProxy :: SProxy "modalRef") Nothing
+        childState :: MessageModal.State
+        childState =
+            { modalMessage: "Hello, world!"
+            , modalRef    : Nothing
+            }
 
-handleAction :: Action -> H.HalogenM State Action ChildSlots Output Aff Unit
+handleAction :: Action -> H.HalogenM State Action Slots Output Aff Unit
 handleAction action =
     case action of
-        ShowDialog -> H.request _child unit MessageModal.GetRef >>=
-            traverse_ (\childState -> traverse_ (\ref -> liftAff $ showModal ref) childState.modalRef)
-        HandleMessageModal _ -> pure unit
+        ShowDialog -> H.request _child unit MessageModal.Open >>=
+            traverse_
+                ( \childState -> do
+                    state <- get
+                    put $ state
+                        { status = state.status <> ". " <> childState.modalMessage
+                        }
+                )
+        HandleMessageModal output -> do
+            state <- get
+            put $ state
+                { status = output
+                }

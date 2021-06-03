@@ -7,7 +7,7 @@ import Control.Monad.State (get, put)
 import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Effect.Aff (Aff)
-import FFI.Materialize (initModal)
+import FFI.Materialize (initModal, showModal)
 import Halogen (liftAff)
 import Halogen as H
 import Halogen.Component as HC
@@ -17,7 +17,7 @@ import Halogen.HTML.Properties as HP
 import Web.HTML (HTMLElement)
 
 data Query :: Type -> Type
-data Query a = GetRef (State -> a)
+data Query a = Open (State -> a)
 
 type State =
     { modalMessage :: String
@@ -25,12 +25,12 @@ type State =
     }
 
 type Input  = State
-type Output = Void
+type Output = String
 
 data Action = Initialize
 
-type ChildSlots :: forall k. Row k
-type ChildSlots = ()
+type Slots :: forall k. Row k
+type Slots = ()
 
 component :: HC.Component Query Input Output Aff
 component =
@@ -45,7 +45,7 @@ component =
             }
         }
 
-html :: State -> HH.ComponentHTML Action ChildSlots Aff
+html :: State -> HH.ComponentHTML Action Slots Aff
 html state =
     HH.div
         [ HP.class_ $ HH.ClassName "modal"
@@ -74,18 +74,21 @@ html state =
             ]
         ]
 
-handleQuery :: forall a. Query a -> H.HalogenM State Action ChildSlots Output Aff (Maybe a)
+handleQuery :: forall a. Query a -> H.HalogenM State Action Slots Output Aff (Maybe a)
 handleQuery query =
     case query of
-        GetRef reply -> do
+        Open reply -> do
             state <- get
+            traverse_ (\ref -> liftAff $ showModal ref) state.modalRef
+            H.raise "Opened"
             pure $ Just $ reply state
 
-handleAction :: Action -> H.HalogenM State Action ChildSlots Output Aff Unit
+handleAction :: Action -> H.HalogenM State Action Slots Output Aff Unit
 handleAction action =
     case action of
-        Initialize -> H.getHTMLElementRef (H.RefLabel "message-modal") >>=
-            traverse_ \ref -> do
-                liftAff $ initModal ref
-                state <- get
-                put $ state { modalRef = Just ref }
+        Initialize -> do
+            H.getHTMLElementRef (H.RefLabel "message-modal") >>=
+                traverse_ \ref -> do
+                    liftAff $ initModal ref
+                    state <- get
+                    put $ state { modalRef = Just ref }
